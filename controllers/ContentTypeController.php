@@ -1,7 +1,10 @@
 <?php
 
 namespace controllers;
+
 use dto\ContentType;
+use dto\Response;
+use main\Config;
 
 class ContentTypeController
 {
@@ -10,13 +13,14 @@ class ContentTypeController
      */
     public function getContentTypes(): array
     {
-        $config = require __DIR__ . '/../config.php';
-        return $config['contentTypes'] ?? [];
+        return Config::getConfig()['contentTypes'] ?? [];
     }
 
-    public function getContentTypesResponse(): void
+    /**
+     * @return Response
+     */
+    public function getContentTypeResponse(): Response
     {
-        $contentTypes = $this->getContentTypes();
-        echo json_encode(['data' => $contentTypes], JSON_UNESCAPED_UNICODE);
+        return Response::success($this->getContentTypes());
     }
 }

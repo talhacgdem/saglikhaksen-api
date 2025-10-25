@@ -12,7 +12,7 @@ class ContentType implements JsonSerializable
     public string $icon;
     public Types $type;
 
-    public function __construct($id, $name, $slug, $icon, $type)
+    public function __construct(int $id, string $name, string $slug, string $icon, Types $type)
     {
         $this->id = $id;
         $this->name = $name;
