@@ -220,4 +220,30 @@ function kurulus_tablosu_shortcode() {
     <?php
     return ob_get_clean();
 }
+
+// === REST API DESTEĞİ ===
+add_action('rest_api_init', function () {
+    register_rest_route('kurulus/v1', '/list', [
+            'methods' => 'GET',
+            'callback' => 'kft_rest_listesi',
+            'permission_callback' => '__return_true', // herkese açık (isteğe göre sınırlandırılabilir)
+    ]);
+});
+
+function kft_rest_listesi($request) {
+    global $wpdb;
+    $tablo = $wpdb->prefix . 'kuruluslar';
+
+    $kategori = sanitize_text_field($request->get_param('kategori'));
+    $sehir = sanitize_text_field($request->get_param('sehir'));
+
+    $kosullar = [];
+    if ($kategori) $kosullar[] = $wpdb->prepare("kategori = %s", $kategori);
+    if ($sehir) $kosullar[] = $wpdb->prepare("sehir = %s", $sehir);
+
+    $where = $kosullar ? "WHERE " . implode(" AND ", $kosullar) : "";
+    $veriler = $wpdb->get_results("SELECT * FROM $tablo $where ORDER BY id DESC");
+
+    return rest_ensure_response($veriler);
+}
 ?>
