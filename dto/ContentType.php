@@ -11,14 +11,16 @@ class ContentType implements JsonSerializable
     public string $slug;
     public string $icon;
     public Types $type;
+    public bool $hasImage;
 
-    public function __construct(int $id, string $name, string $slug, string $icon, Types $type)
+    public function __construct(int $id, string $name, string $slug, string $icon, Types $type, bool $hasImage)
     {
         $this->id = $id;
         $this->name = $name;
         $this->slug = $slug;
         $this->icon = $icon;
         $this->type = $type;
+        $this->hasImage = $hasImage;
     }
 
     public function toArray(): array
@@ -28,7 +30,8 @@ class ContentType implements JsonSerializable
             "name" => $this->name,
             "slug" => $this->slug,
             "icon" => $this->icon,
-            "type" => $this->type->name
+            "type" => $this->type->name,
+            "has_image" => $this->hasImage
         ];
     }
 

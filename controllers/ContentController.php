@@ -12,22 +12,11 @@ use main\Config;
 
 class ContentController
 {
-    private string $baseUrl = 'https://www.saglikhaksen.org.tr/wp-json/wp/v2';
-    private string $cacheDir;
-    private string $username;
-    private string $password;
+    private string $baseUrl = 'https://www.saglikhaksen.org.tr/wp-json';
 
     public function __construct()
     {
-
         $config = Config::getConfig();
-        $this->username = $config['auth']['username'];
-        $this->password = $config['auth']['password'];
-
-        $this->cacheDir = __DIR__ . '/../cache';
-        if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0777, true);
-        }
     }
 
     /**
@@ -37,8 +26,8 @@ class ContentController
     public function getContents(): Response
     {
         $slug = $_GET['contentType'] ?? null;
-        $page = (int)($_GET['page'] ?? 1);
-        $perPage = (int)($_GET['perPage'] ?? 10);
+        $page = (int) ($_GET['page'] ?? 1);
+        $perPage = (int) ($_GET['perPage'] ?? 10);
 
         if (empty($slug)) {
             throw new Exception('contentType parametresi zorunludur', 400);
@@ -52,11 +41,20 @@ class ContentController
         if ($contentType->type === Types::category) {
             [$posts, $headers] = $this->fetchPostsByCategory($contentType->id, $page, $perPage);
             $contents = array_map(fn($post) => $this->mapPostToContent($post), $posts);
-            $totalItems = isset($headers['X-WP-Total']) ? (int)$headers['X-WP-Total'] : count($contents);
+            $totalItems = isset($headers['X-WP-Total']) ? (int) $headers['X-WP-Total'] : count($contents);
             $meta = new Pageable($page, $perPage, $totalItems);
-        } else {
+        } elseif ($contentType->type === Types::page) {
             $contents = $this->fetchPageById($contentType->id);
             $meta = new Pageable(1, 1, 1);
+        } else {
+            $contents = $this->getOtherTypes($slug);
+            $meta = new Pageable(1, 1, 1);
+        }
+
+        $i = 0;
+        foreach ($contents as $content) {
+            $content->id = $i;
+            $i++;
         }
 
         return Response::success($contents, $meta);
@@ -84,13 +82,36 @@ class ContentController
             'categories' => $catId,
             '_embed' => true,
         ]);
+        $url = "$this->baseUrl/wp/v2/posts?$query";
+        return $this->fetchWithHeaders($url);
+    }
 
-        $cacheFile = "$this->cacheDir/cat_{$catId}_page$page.json";
+    /**
+     * @return Content[]
+     */
+    private function getOtherTypes(string $slug): array
+    {
 
-        return $this->getCached($cacheFile, function () use ($query) {
-            $url = "$this->baseUrl/posts?$query";
-            return $this->fetchWithHeaders($url);
-        });
+        if ($slug === 'subelerimiz') {
+            $url = "$this->baseUrl/subeler/v1/list";
+            [$response, $headers] = $this->fetchWithHeaders($url, true);
+            return array_map(
+                fn($resp) =>
+                new Content(
+                    $resp['sube_adi'] . ' - ' . $resp['il'],
+                    'Adres: ' . $resp['adres'] . '<br>' .
+                    'Telefon: ' . $resp['telefon'] . '<br>' .
+                    'Şube başkanı: ' . $resp['baskan'],
+                    null,
+                    null,
+                    ''
+                )
+                ,
+                $response
+            );
+        } else {
+            throw new Exception('Geçersiz contentType', 400);
+        }
     }
 
     /**
@@ -98,16 +119,9 @@ class ContentController
      */
     private function fetchPageById(int $pageId): array
     {
-        $cacheFile = "$this->cacheDir/page_$pageId.json";
-
-        [$response, $headers] = $this->getCached($cacheFile, function () use ($pageId) {
-            $url = "$this->baseUrl/pages/$pageId?context=view&_embed=1";
-            return $this->fetchWithHeaders($url, true);
-        });
-
-        return [
-            $this->mapPostToContent($response)
-        ];
+        $url = "$this->baseUrl/wp/v2/pages/$pageId?context=view&_embed=1";
+        [$response, $headers] = $this->fetchWithHeaders($url, true);
+        return [$this->mapPostToContent($response)];
     }
 
     private function mapPostToContent(array $post): Content
@@ -127,14 +141,13 @@ class ContentController
     private function fetchWithHeaders(string $url, bool $auth = false): array
     {
         $headers = [];
-        $opts = ['http' => ['method' => 'GET', 'ignore_errors' => true]];
-
-        if ($auth) {
-            $authHeader = base64_encode("$this->username:$this->password");
-            $opts['http']['header'] = "Authorization: Basic $authHeader\r\nAccept: application/json";
-        } else {
-            $opts['http']['header'] = "Accept: application/json";
-        }
+        $opts = [
+            'http' => [
+                'method' => 'GET',
+                'ignore_errors' => true,
+                'header' => "Accept: application/json"
+            ]
+        ];
 
         $context = stream_context_create($opts);
         $response = file_get_contents($url, false, $context);
@@ -152,22 +165,5 @@ class ContentController
         }
 
         return [json_decode($response, true) ?? [], $headers];
-    }
-
-    /**
-     * @template T
-     * @param callable():array{0:T,1:array} $fetch
-     * @return array{0:T,1:array}
-     */
-    private function getCached(string $file, callable $fetch): array
-    {
-        $ttl = 600;
-        if (file_exists($file) && (time() - filemtime($file)) < $ttl) {
-            return [json_decode(file_get_contents($file), true), []];
-        }
-
-        [$data, $headers] = $fetch();
-        file_put_contents($file, json_encode($data));
-        return [$data, $headers];
     }
 }

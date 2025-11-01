@@ -31,7 +31,7 @@ $segments = explode('/', $uri);
 $endpoint = $segments[1] ?? $segments[0] ?? '';
 
 try {
-    sleep(3);
+    //sleep(3);
     $data = match ($endpoint) {
         'content-types' => (new ContentTypeController())->getContentTypeResponse(),
         'contents' => (new ContentController())->getContents(),
