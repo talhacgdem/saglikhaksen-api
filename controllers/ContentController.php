@@ -40,12 +40,9 @@ class ContentController
 
         if ($contentType->type === Types::category) {
             [$posts, $headers] = $this->fetchPostsByCategory($contentType->id, $page, $perPage);
-            $contents = array_map(fn($post) => $this->mapPostToContent($post), $posts);
+            $contents = array_map(fn($post) => Content::postToContent($post), $posts);
             $totalItems = isset($headers['X-WP-Total']) ? (int) $headers['X-WP-Total'] : count($contents);
             $meta = new Pageable($page, $perPage, $totalItems);
-        } elseif ($contentType->type === Types::page) {
-            $contents = $this->fetchPageById($contentType->id);
-            $meta = new Pageable(1, 1, 1);
         } else {
             $contents = $this->getOtherTypes($slug);
             $meta = new Pageable(1, 1, 1);
@@ -58,17 +55,6 @@ class ContentController
         }
 
         return Response::success($contents, $meta);
-    }
-
-    private function findContentType(string $slug): ?ContentType
-    {
-        $controller = new ContentTypeController();
-        foreach ($controller->getContentTypes() as $type) {
-            if ($type->slug === $slug) {
-                return $type;
-            }
-        }
-        return null;
     }
 
     /**
@@ -94,45 +80,50 @@ class ContentController
 
         if ($slug === 'subelerimiz') {
             $url = "$this->baseUrl/subeler/v1/list";
-            [$response, $headers] = $this->fetchWithHeaders($url, true);
-            return array_map(
-                fn($resp) =>
-                new Content(
-                    $resp['sube_adi'] . ' - ' . $resp['il'],
-                    'Adres: ' . $resp['adres'] . '<br>' .
-                    'Telefon: ' . $resp['telefon'] . '<br>' .
-                    'Şube başkanı: ' . $resp['baskan'],
-                    null,
-                    null,
-                    ''
-                )
-                ,
-                $response
-            );
+            [$subeler, $headers] = $this->fetchWithHeaders($url, true);
+            return array_map(fn($sube) => Content::subeToContent($sube), $subeler);
         } else {
-            throw new Exception('Geçersiz contentType', 400);
+            $url = "$this->baseUrl/kurulus/v1/list";
+            switch ($slug) {
+                case 'saglik:tekstil':
+                    $url .= '?kategoriler=Tekstil';
+                    break;
+                case 'saglik:egitim':
+                    $url .= '?kategoriler=Eğitim';
+                    break;
+                case 'saglik:hizmet':
+                    $url .= '?kategoriler=Hizmet';
+                    break;
+                case 'saglik:eglence':
+                    $url .= '?kategoriler=Eğlence';
+                    break;
+                case 'saglik:restaurant':
+                    $url .= '?kategoriler=Restaurant';
+                    break;
+                case 'saglik:spor':
+                    $url .= '?kategoriler=Spor';
+                    break;
+                case 'saglik:otomobil':
+                    $url .= '?kategoriler=Otomobil';
+                    break;
+                case 'saglik:kuafor':
+                    $url .= '?kategoriler=Kuaför';
+                    break;
+                case 'saglik:cicek':
+                    $url .= '?kategoriler=Çiçek';
+                    break;
+                case 'saglik:kirtasiye':
+                    $url .= '?kategoriler=Kırtasiye';
+                    break;
+                case 'saglik:tatil':
+                    $url .= '?kategoriler=Tatil';
+                    break;
+                default:
+                    throw new Exception('Geçersiz contentType', 400);
+            }
+            [$subeler, $headers] = $this->fetchWithHeaders($url, true);
+            return array_map(fn($sube) => Content::kurulusToContent($sube), $subeler);
         }
-    }
-
-    /**
-     * @return Content[]
-     */
-    private function fetchPageById(int $pageId): array
-    {
-        $url = "$this->baseUrl/wp/v2/pages/$pageId?context=view&_embed=1";
-        [$response, $headers] = $this->fetchWithHeaders($url, true);
-        return [$this->mapPostToContent($response)];
-    }
-
-    private function mapPostToContent(array $post): Content
-    {
-        return new Content(
-            $post['title']['rendered'] ?? '',
-            strip_tags($post['excerpt']['rendered'] ?? $post['content']['rendered'] ?? ''),
-            $post['jetpack_featured_media_url'] ?? ($post['_embedded']['wp:featuredmedia'][0]['source_url'] ?? null),
-            $post['date'] ?? null,
-            $post['_embedded']['author'][0]['name'] ?? 'Anonim'
-        );
     }
 
     /**
@@ -165,5 +156,16 @@ class ContentController
         }
 
         return [json_decode($response, true) ?? [], $headers];
+    }
+
+    private function findContentType(string $slug): ?ContentType
+    {
+        $controller = new ContentTypeController();
+        foreach ($controller->getContentTypes() as $type) {
+            if ($type->slug === $slug) {
+                return $type;
+            }
+        }
+        return null;
     }
 }

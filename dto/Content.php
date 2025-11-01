@@ -15,7 +15,7 @@ class Content implements JsonSerializable
 
     public function __construct(string $title, string $content, ?string $image, ?string $created_at, string $author)
     {
-        
+
         $this->title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $this->content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $this->image = $image;
@@ -38,5 +38,40 @@ class Content implements JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    public static function postToContent(array $post): Content
+    {
+        return new Content(
+            $post['title']['rendered'] ?? '',
+            strip_tags($post['excerpt']['rendered'] ?? $post['content']['rendered'] ?? ''),
+            $post['jetpack_featured_media_url'] ?? ($post['_embedded']['wp:featuredmedia'][0]['source_url'] ?? null),
+            $post['date'] ?? null,
+            $post['_embedded']['author'][0]['name'] ?? 'Anonim'
+        );
+    }
+
+    public static function subeToContent(array $sube): Content
+    {
+        return new Content(
+            $sube['sube_adi'] . ' - ' . $sube['il'],
+            'Adres: ' . $sube['adres'] . '<br>' .
+            'Telefon: ' . $sube['telefon'] . '<br>' .
+            'Şube başkanı: ' . $sube['baskan'],
+            null,
+            null,
+            ''
+        );
+    }
+
+    public static function kurulusToContent(array $kurulus): Content
+    {
+        return new Content(
+            $kurulus['ad'] . ' - ' . $kurulus['sehir'],
+            $kurulus['anlasma_detaylari'],
+            null,
+            null,
+            ''
+        );
     }
 }

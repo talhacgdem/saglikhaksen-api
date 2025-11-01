@@ -20,35 +20,18 @@ class Config
                 new ContentType(28, 'Başvurularımız', 'basvurularimiz', 'notifications', Types::category, true),
                 new ContentType(23, 'Haberler', 'haberler', 'article', Types::category, true),
                 new ContentType(30, 'Hedeflerimiz', 'hedeflerimiz', 'notifications', Types::category, true),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-                new ContentType(0, 'Şubelerimiz', 'subelerimiz', 'subdirectory-arrow-right', Types::other, false),
-
+                new ContentType(0, 'Tekstil', 'saglik:tekstil', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Eğitim', 'saglik:egitim', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Hizmet', 'saglik:hizmet', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Eğlence', 'saglik:eglence', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Restaurant', 'saglik:restaurant', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Spor', 'saglik:spor', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Otomobil', 'saglik:otomobil', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Kuaför', 'saglik:kuafor', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Çiçek', 'saglik:cicek', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Kırtasiye', 'saglik:kirtasiye', 'subdirectory-arrow-right', Types::other, false),
+                new ContentType(0, 'Tatil', 'saglik:tatil', 'subdirectory-arrow-right', Types::other, false),
             ]
         ];
     }
 }
-
-
-/*
-Tekstil
-Tatil & Turizm
-Eğitim
-Hizmet
-Sağlık
-Yemek
-Tekstil & Giyim
-Eğlence
-Cafe & Rastaurant
-Spor
-Otomobil
-Kuaför & Güzellik
-Çiçek
-Kitap & Kırtasiye
-Baklava dünyası
-Tatil
-*/
