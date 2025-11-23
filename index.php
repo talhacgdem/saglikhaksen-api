@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 
 use controllers\ContentController;
 use controllers\ContentTypeController;
+use controllers\LoginController;
 use dto\Response;
 
 header("Content-Type: application/json; charset=UTF-8");
@@ -17,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once __DIR__ . '/controllers/ContentController.php';
 require_once __DIR__ . '/controllers/ContentTypeController.php';
+require_once __DIR__ . '/controllers/LoginController.php';
 require_once __DIR__ . '/dto/Content.php';
 require_once __DIR__ . '/dto/ContentType.php';
 require_once __DIR__ . '/dto/Types.php';
@@ -35,6 +37,7 @@ try {
     $data = match ($endpoint) {
         'content-types' => (new ContentTypeController())->getContentTypeResponse(),
         'contents' => (new ContentController())->getContents(),
+        'login' => (new LoginController())->login(),
         default => throw new Exception("Endpoint not found", 404),
     };
 
