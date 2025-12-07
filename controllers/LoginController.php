@@ -3,6 +3,7 @@
 namespace controllers;
 
 use dto\Response;
+use dto\User;
 
 class LoginController
 {
@@ -12,7 +13,7 @@ class LoginController
      */
     public function login(): Response
     {
-        $user = $this->parseBasicAuth();
+        $user = $_POST['identityNumber'];
 
         if (!$user) {
             throw new \Exception("Authorization header missing or invalid", 401);
@@ -21,40 +22,20 @@ class LoginController
         return Response::success($this->loginFromUser($user));
     }
 
-    private function loginFromUser($user)
+    /**
+     * @return User
+     */
+    private function loginFromUser($user): User
     {
-        $curl = curl_init();
-
         $data = array(
             'action' => 'Login',
-            'user' => $user
+            'user' => array(
+                'email' => 'biomuratozekinci@gmail.com',
+                'password' => '123456'
+            )
         );
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://server.saglikhaksen.com/index',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json'
-            ),
-        ));
-
-        $response = curl_exec($curl);
-
-        // cURL hata kontrolü
-        if (curl_errno($curl)) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            throw new \Exception("cURL Error: " . $error);
-        }
-
-        curl_close($curl);
+        $response = $this->executeCurl($data);
 
         // JSON parse denemesi
         $decoded = json_decode($response, true);
@@ -66,19 +47,30 @@ class LoginController
         if ($decoded["userData"]['durumu'] !== "Aktif") {
             throw new \Exception("User is inactive ", 403);
         }
-        // JSON geçerli ve AccessToken varsa parse edilmiş veriyi dön
-        return [
-            "name" => $decoded['userData']["k_adi"],
-            "surname" => $decoded['userData']["k_soyadi"],
-            "email" => $decoded['userData']["eposta"],
-            "phone" => $decoded['userData']["tel_no"],
-            "memberNo" => '',
-            "identityNumber" => '',
-            "location" => '',
-            "job" => $decoded['userData']["rolu"],
-            "active" => $decoded['userData']["durumu"],
-            "access_token" => $decoded["AccessToken"]
-        ];
+
+        $access_token = $decoded["AccessToken"];
+        return $this->getUser($access_token, $user);
+    }
+
+    private function getUser($access_token, $identityNumber): User
+    {
+        $response = $this->executeCurl(array(
+            'action' => 'GetUsers'
+        ), $access_token);
+        $decoded = json_decode($response, true);
+        if (!is_array($decoded)) {
+            throw new \Exception('Expected array response');
+        }
+
+        foreach ($decoded as $userData) {
+            if (
+                isset($userData['kimlik_no']) && $userData['kimlik_no'] == $identityNumber &&
+                isset($userData['durumu']) && $userData['durumu'] === 'Aktif'
+            ) {
+                return new User($userData);
+            }
+        }
+        throw new \Exception("User with identity number {$identityNumber} not found");
     }
 
     /**
@@ -140,6 +132,44 @@ class LoginController
         }
 
         return null;
+    }
+
+    private function executeCurl(array $data, string $access_token = null): bool|string
+    {
+
+        $headers = array(
+            'Content-Type: application/json'
+        );
+        if (isset($access_token)) {
+            $headers[] = 'Authorization: Bearer ' . $access_token;
+        }
+
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://server.saglikhaksen.com/index',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => $headers,
+        ));
+
+        $response = curl_exec($curl);
+
+        // cURL hata kontrolü
+        if (curl_errno($curl)) {
+            $error = curl_error($curl);
+            curl_close($curl);
+            throw new \Exception("cURL Error: " . $error);
+        }
+
+        curl_close($curl);
+
+        return $response;
     }
 }
 

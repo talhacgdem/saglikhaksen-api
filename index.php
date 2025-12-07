@@ -21,6 +21,7 @@ require_once __DIR__ . '/controllers/ContentTypeController.php';
 require_once __DIR__ . '/controllers/LoginController.php';
 require_once __DIR__ . '/dto/Content.php';
 require_once __DIR__ . '/dto/ContentType.php';
+require_once __DIR__ . '/dto/User.php';
 require_once __DIR__ . '/dto/Types.php';
 require_once __DIR__ . '/dto/Response.php';
 require_once __DIR__ . '/dto/Pageable.php';
