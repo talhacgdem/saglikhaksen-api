@@ -126,60 +126,60 @@ class ContentController
         }
     }
 
-/**
- * @return array{0: array, 1: array} $data, $headers
- */
-private function fetchWithHeaders(string $url, bool $auth = false): array
-{
-    $headers = [];
-    $curlHeaders = [
-        "Accept: application/json"
-    ];
+    /**
+     * @return array{0: array, 1: array} $data, $headers
+     */
+    private function fetchWithHeaders(string $url, bool $auth = false): array
+    {
+        $headers = [];
+        $curlHeaders = [
+            "Accept: application/json"
+        ];
 
-    $ch = curl_init();
+        $ch = curl_init();
 
-    curl_setopt_array($ch, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_HEADER => true,   // RESPONSE HEADER + BODY birlikte gelecek
-        CURLOPT_HTTPHEADER => $curlHeaders
-    ]);
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_HEADER => true,   // RESPONSE HEADER + BODY birlikte gelecek
+            CURLOPT_HTTPHEADER => $curlHeaders
+        ]);
 
-    $response = curl_exec($ch);
+        $response = curl_exec($ch);
 
-    if ($response === false) {
-        curl_close($ch);
-        return [[], []];
-    }
-
-    // Header boyutunu al
-    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-
-    // Header ve Body'i ayır
-    $rawHeaders = substr($response, 0, $headerSize);
-    $body = substr($response, $headerSize);
-
-    curl_close($ch);
-
-    // Header'ları parse et
-    $lines = explode("\n", $rawHeaders);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if (preg_match('/^(X-WP-[A-Za-z-]+):\s*(.+)$/i', $line, $matches)) {
-            $headers[$matches[1]] = trim($matches[2]);
+        if ($response === false) {
+            curl_close($ch);
+            return [[], []];
         }
-    }
 
-    // Body JSON parse
-    $json = json_decode($body, true);
-    if (!is_array($json)) {
-        $json = [];
-    }
+        // Header boyutunu al
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
-    return [$json, $headers];
-}
+        // Header ve Body'i ayır
+        $rawHeaders = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+
+        curl_close($ch);
+
+        // Header'ları parse et
+        $lines = explode("\n", $rawHeaders);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (preg_match('/^(X-WP-[A-Za-z-]+):\s*(.+)$/i', $line, $matches)) {
+                $headers[$matches[1]] = trim($matches[2]);
+            }
+        }
+
+        // Body JSON parse
+        $json = json_decode($body, true);
+        if (!is_array($json)) {
+            $json = [];
+        }
+
+        return [$json, $headers];
+    }
 
     private function findContentType(string $slug): ?ContentType
     {
@@ -187,6 +187,11 @@ private function fetchWithHeaders(string $url, bool $auth = false): array
         foreach ($controller->getContentTypes() as $type) {
             if ($type->slug === $slug) {
                 return $type;
+            }
+            foreach ($type->subCategories as $subCategory) {
+                if ($subCategory->slug === $slug) {
+                    return $subCategory;
+                }
             }
         }
         return null;

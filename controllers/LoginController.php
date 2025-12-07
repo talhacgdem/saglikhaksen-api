@@ -31,7 +31,7 @@ class LoginController
         );
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://www.saglikhaksen.xyz/index',
+            CURLOPT_URL => 'https://server.saglikhaksen.com/index',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -72,6 +72,9 @@ class LoginController
             "surname" => $decoded['userData']["k_soyadi"],
             "email" => $decoded['userData']["eposta"],
             "phone" => $decoded['userData']["tel_no"],
+            "memberNo" => '',
+            "identityNumber" => '',
+            "location" => '',
             "job" => $decoded['userData']["rolu"],
             "active" => $decoded['userData']["durumu"],
             "access_token" => $decoded["AccessToken"]

@@ -12,8 +12,10 @@ class ContentType implements JsonSerializable
     public string $icon;
     public Types $type;
     public bool $hasImage;
+    /** @var ContentType[] */
+    public array $subCategories;
 
-    public function __construct(int $id, string $name, string $slug, string $icon, Types $type, bool $hasImage)
+    public function __construct(int $id, string $name, string $slug, string $icon, Types $type, bool $hasImage, array $subCategories = [])
     {
         $this->id = $id;
         $this->name = $name;
@@ -21,6 +23,7 @@ class ContentType implements JsonSerializable
         $this->icon = $icon;
         $this->type = $type;
         $this->hasImage = $hasImage;
+        $this->subCategories = $subCategories;
     }
 
     public function toArray(): array
@@ -31,7 +34,8 @@ class ContentType implements JsonSerializable
             "slug" => $this->slug,
             "icon" => $this->icon,
             "type" => $this->type->name,
-            "has_image" => $this->hasImage
+            "has_image" => $this->hasImage,
+            "subCategories" => array_map(fn(ContentType $subCategory) => $subCategory->toArray(), $this->subCategories)
         ];
     }
 
