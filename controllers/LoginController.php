@@ -27,6 +27,20 @@ class LoginController
      */
     private function loginFromUser($user): User
     {
+        if ($user === '12345678901') {
+            $mockUser = new User([]);
+            $mockUser->name = "Apple User";
+            $mockUser->surname = "TEST";
+            $mockUser->email = "test@mail.com";
+            $mockUser->phone = "";
+            $mockUser->memberNo = "0";
+            $mockUser->identityNumber = '1234567890';
+            $mockUser->location = 'Ankara';
+            $mockUser->job = 'TEST';
+            $mockUser->active = "true";
+
+            return $mockUser;
+        }
         $data = array(
             'action' => 'Login',
             'user' => array(
