@@ -7,11 +7,12 @@ use JsonSerializable;
 class Response implements JsonSerializable
 {
     public bool $success;
-    public mixed $data;
+    /** @var mixed */
+    public $data;
     public ?Pageable $meta;
     public ?array $error;
 
-    public function __construct(bool $success, mixed $data = null, Pageable $meta = null, ?array $error = null)
+    public function __construct(bool $success, $data = null, Pageable $meta = null, ?array $error = null)
     {
         $this->success = $success;
         $this->data = $data;
@@ -19,7 +20,7 @@ class Response implements JsonSerializable
         $this->error = $error;
     }
 
-    public static function success(mixed $data, Pageable $meta = null): self
+    public static function success($data, Pageable $meta = null): self
     {
         return new self(true, $data, $meta, null);
     }

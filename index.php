@@ -35,12 +35,19 @@ $endpoint = $segments[1] ?? $segments[0] ?? '';
 
 try {
     //sleep(3);
-    $data = match ($endpoint) {
-        'content-types' => (new ContentTypeController())->getContentTypeResponse(),
-        'contents' => (new ContentController())->getContents(),
-        'login' => (new LoginController())->login(),
-        default => throw new Exception("Endpoint not found", 404),
-    };
+    switch ($endpoint) {
+        case 'content-types':
+            $data = (new ContentTypeController())->getContentTypeResponse();
+            break;
+        case 'contents':
+            $data = (new ContentController())->getContents();
+            break;
+        case 'login':
+            $data = (new LoginController())->login();
+            break;
+        default:
+            throw new Exception("Endpoint not found", 404);
+    }
 
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {

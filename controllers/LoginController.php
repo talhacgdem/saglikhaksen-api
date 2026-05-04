@@ -148,7 +148,13 @@ class LoginController
         return null;
     }
 
-    private function executeCurl(array $data, string $access_token = null): bool|string
+    /**
+     * @param array $data
+     * @param string|null $access_token
+     * @return bool|string
+     * @throws \Exception
+     */
+    private function executeCurl(array $data, string $access_token = null)
     {
 
         $headers = array(

@@ -2,9 +2,9 @@
 
 namespace dto;
 
-enum Types
+class Types
 {
-    case category;
-    case page;
-    case other;
+    public const category = 'category';
+    public const page = 'page';
+    public const other = 'other';
 }
